@@ -17,10 +17,29 @@
 #include <infinity/memory/RegionToken.h>
 #include <infinity/requests/RequestToken.h>
 
+#include <vector>
+
 namespace infinity {
 namespace queues {
 class QueuePairFactory;
 }
+} // namespace infinity
+
+namespace infinity {
+namespace queues {
+struct SendRequestBuffer {
+  std::vector<ibv_sge> sges;
+  std::vector<ibv_send_wr> requests;
+  SendRequestBuffer(int num) {
+    sges.resize(num);
+    requests.resize(num);
+  }
+  void reset() {
+    memset(sges.data(), 0, sizeof(ibv_sge));
+    memset(requests.data(), 0, sizeof(ibv_send_wr));
+  }
+};
+} // namespace queues
 } // namespace infinity
 
 namespace infinity {
@@ -117,6 +136,13 @@ public:
             infinity::memory::RegionToken *source, uint64_t remoteOffset,
             uint32_t sizeInBytes, OperationFlags flags,
             infinity::requests::RequestToken *requestToken = NULL);
+  void batch_read(infinity::memory::Buffer *buffer,
+                  std::vector<uint64_t> &localOffset,
+                  infinity::memory::RegionToken *source,
+                  std::vector<uint64_t> &remoteOffset, uint32_t sizeInBytes,
+                  OperationFlags send_flags,
+                  infinity::requests::RequestToken *requestToken,
+                  infinity::queues::SendRequestBuffer &send_buffer);
 
 public:
   /**
