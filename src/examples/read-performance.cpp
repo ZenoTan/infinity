@@ -63,8 +63,8 @@ int main(int argc, char **argv) {
   if (isServer) {
 
     printf("Creating buffers to read from and write to\n");
-    infinity::memory::Buffer *bufferToReadWrite =
-        new infinity::memory::Buffer(context, 512 * sizeof(char));
+    infinity::memory::Buffer *bufferToReadWrite = new infinity::memory::Buffer(
+        context, REQ_LIST * REQ_BYTES * sizeof(char));
     infinity::memory::RegionToken *bufferToken =
         bufferToReadWrite->createRegionToken();
 
@@ -96,12 +96,16 @@ int main(int argc, char **argv) {
 
     printf("Creating buffers\n");
     std::vector<infinity::memory::Buffer *> buffers;
-    infinity::memory::Buffer *buffer1Sided =
-        new infinity::memory::Buffer(context, 512 * sizeof(char));
+    infinity::memory::Buffer *buffer1Sided = new infinity::memory::Buffer(
+        context, REQ_LIST * REQ_BYTES * sizeof(char));
 
     infinity::queues::SendRequestBuffer send_buffer(REQ_LIST);
     std::vector<uint64_t> local_offset(REQ_LIST, 0);
     std::vector<uint64_t> remote_offset(REQ_LIST, 0);
+    for (int i = 0; i < REQ_LIST; i++) {
+      local_offset[i] = i * REQ_BYTES;
+      remote_offset[i] = i * REQ_BYTES;
+    }
 
     printf("Reading content from remote buffer\n");
     std::vector<infinity::requests::RequestToken *> requests;
