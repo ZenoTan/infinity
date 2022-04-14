@@ -113,16 +113,16 @@ int main(int argc, char **argv) {
       struct timeval start;
       struct timeval stop;
       uint64_t cur = 0;
+      gettimeofday(&start, NULL);
       for (int j = 0; j < NUM_REQ; j++) {
-        gettimeofday(&start, NULL);
         qp->batch_read(buffer1Sided, local_offset, remoteBufferToken,
                        remote_offset, REQ_BYTES,
                        infinity::queues::OperationFlags(), requests[j],
                        send_buffer);
         requests[j]->waitUntilCompleted();
-        gettimeofday(&stop, NULL);
-        cur += timeDiff(stop, start);
       }
+      gettimeofday(&stop, NULL);
+      cur = timeDiff(stop, start);
 
       printf("Cur %d took %lu\n", REQ_BYTES * NUM_REQ * REQ_LIST, cur);
       cnt += cur;
