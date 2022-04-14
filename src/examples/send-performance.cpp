@@ -21,7 +21,7 @@
 #include <infinity/requests/RequestToken.h>
 
 #define PORT_NUMBER 8011
-#define SERVER_IP "192.0.0.1"
+#define SERVER_IP "10.10.10.1"
 #define BUFFER_COUNT 128
 #define MAX_BUFFER_SIZE 4096
 #define OPERATIONS_COUNT 1024
