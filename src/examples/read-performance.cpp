@@ -80,7 +80,7 @@ void run_client(int rank) {
       new infinity::queues::QueuePairFactory(context);
   infinity::queues::QueuePair *qp;
   printf("Connecting to remote node\n");
-  qp = qpFactory->connectToRemoteHost(SERVER_IP, PORT_NUMBER);
+  qp = qpFactory->connectToRemoteHost(SERVER_IP, PORT_NUMBER + rank);
   infinity::memory::RegionToken *remoteBufferToken =
       (infinity::memory::RegionToken *)qp->getUserData();
 
