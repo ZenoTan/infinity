@@ -24,10 +24,10 @@
 #include <infinity/queues/QueuePairFactory.h>
 #include <infinity/requests/RequestToken.h>
 
-#define PORT_NUMBER 8011
-#define SERVER_IP "155.198.152.17"
+#define PORT_NUMBER 37653
+#define REMOTE_IP "155.198.152.17"
 
-#define NUM_ITER 100
+#define NUM_ITER 500
 #define NUM_REQ 5000
 #define REQ_LIST 20
 #define REQ_BYTES 512
@@ -77,20 +77,25 @@ void run_server(int rank) {
 }
 
 void run_client(int rank) {
+  using namespace std::chrono_literals;
+
   infinity::core::Context *context = new infinity::core::Context();
   infinity::queues::QueuePairFactory *qpFactory =
       new infinity::queues::QueuePairFactory(context);
   infinity::queues::QueuePair *qp;
-  printf("Connecting to remote node\n");
-  qp = qpFactory->connectToRemoteHost(SERVER_IP, PORT_NUMBER + rank);
-  infinity::memory::RegionToken *remoteBufferToken =
-      (infinity::memory::RegionToken *)qp->getUserData();
 
   printf("Creating buffers\n");
   std::vector<infinity::memory::Buffer *> buffers;
   infinity::memory::Buffer *buffer1Sided = new infinity::memory::Buffer(
       context,
       size_t(NUM_ITER) * NUM_REQ * REQ_LIST * REQ_BYTES * sizeof(char));
+
+  std::this_thread::sleep_for(10s);
+
+  printf("Connecting to remote node\n");
+  qp = qpFactory->connectToRemoteHost(REMOTE_IP, PORT_NUMBER + rank);
+  infinity::memory::RegionToken *remoteBufferToken =
+      (infinity::memory::RegionToken *)qp->getUserData();
 
   infinity::queues::SendRequestBuffer send_buffer(REQ_LIST);
   std::vector<uint64_t> local_offset(REQ_LIST, 0);
@@ -177,10 +182,9 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_THREAD; i++) {
       server_threads.push_back(std::thread(run_server, i));
     }
-    sleep(5);
     std::vector<std::thread> client_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
-      client_threads.push_back(std::thread(run_client, i + NUM_THREAD));
+      client_threads.push_back(std::thread(run_client, i));
     }
     for (auto &t : server_threads) {
       t.join();
@@ -191,9 +195,8 @@ int main(int argc, char **argv) {
   } else {
     std::vector<std::thread> server_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
-      server_threads.push_back(std::thread(run_server, i + NUM_THREAD));
+      server_threads.push_back(std::thread(run_server, i));
     }
-    sleep(5);
     std::vector<std::thread> client_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
       client_threads.push_back(std::thread(run_client, i));
