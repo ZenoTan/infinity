@@ -31,8 +31,9 @@
 #define NUM_REQ 5000
 #define REQ_LIST 20
 #define REQ_BYTES 512
+#define SIGN_INTERVAL 25
 
-#define NUM_THREAD 48
+#define NUM_THREAD 1
 
 uint64_t timeDiff(struct timeval stop, struct timeval start) {
   return (stop.tv_sec * 1000000L + stop.tv_usec) -
@@ -110,11 +111,16 @@ void run_client(int rank) {
     uint64_t cur = 0;
     gettimeofday(&start, NULL);
     for (int j = 0; j < NUM_REQ; j++) {
+      infinity::requests::RequestToken *token = nullptr;
+      if (j % SIGN_INTERVAL == SIGN_INTERVAL - 1) {
+        token = requests[j];
+      }
       qp->batch_read(buffer1Sided, local_offset, remoteBufferToken,
                      remote_offset, REQ_BYTES,
-                     infinity::queues::OperationFlags(), requests[j],
-                     send_buffer);
-      context->pollSendCompletionFast(1, &wc);
+                     infinity::queues::OperationFlags(), token, send_buffer);
+      if (j % SIGN_INTERVAL == SIGN_INTERVAL - 1) {
+        context->pollSendCompletionFast(1, &wc);
+      }
     }
     gettimeofday(&stop, NULL);
     cur = timeDiff(stop, start);
