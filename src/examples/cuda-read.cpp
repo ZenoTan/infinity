@@ -34,6 +34,7 @@
 #define SIGN_INTERVAL 25
 
 #define NUM_THREAD 4
+#define CUDA_DEVICE 1
 
 uint64_t timeDiff(struct timeval stop, struct timeval start) {
   return (stop.tv_sec * 1000000L + stop.tv_usec) -
@@ -87,8 +88,7 @@ void run_client(int rank) {
   printf("Creating buffers\n");
   std::vector<infinity::memory::Buffer *> buffers;
   infinity::memory::Buffer *buffer1Sided = new infinity::memory::Buffer(
-      context, size_t(NUM_ITER) * NUM_REQ * REQ_LIST * REQ_BYTES * sizeof(char),
-      1);
+      context, NUM_REQ * REQ_LIST * REQ_BYTES * sizeof(char), CUDA_DEVICE);
 
   printf("Connecting to remote node\n");
   qp = qpFactory->connectToRemoteHost(REMOTE_IP, PORT_NUMBER + rank);
@@ -113,9 +113,10 @@ void run_client(int rank) {
     gettimeofday(&start, NULL);
     for (int j = 0; j < NUM_REQ; j++) {
       for (int t = 0; t < REQ_LIST; t++) {
-        local_offset[t] = (size_t)i * NUM_REQ * REQ_LIST * REQ_BYTES +
-                          j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
-        remote_offset[t] = local_offset[t];
+        remote_offset[t] = (size_t)i * NUM_REQ * REQ_LIST * REQ_BYTES +
+                           j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
+        local_offset[t] = j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
+        ;
       }
       infinity::requests::RequestToken *token = nullptr;
       if (j % SIGN_INTERVAL == SIGN_INTERVAL - 1) {
