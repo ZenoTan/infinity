@@ -117,7 +117,7 @@ void QueuePair::activate(uint16_t remoteDeviceId,
   qpAttributes.path_mtu = IBV_MTU_4096;
   qpAttributes.dest_qp_num = remoteQueuePairNumber;
   qpAttributes.rq_psn = remoteSequenceNumber;
-  qpAttributes.max_dest_rd_atomic = 1;
+  qpAttributes.max_dest_rd_atomic = 64;
   qpAttributes.min_rnr_timer = 12;
   qpAttributes.ah_attr.is_global = 0;
   qpAttributes.ah_attr.dlid = remoteDeviceId;
@@ -139,7 +139,7 @@ void QueuePair::activate(uint16_t remoteDeviceId,
   qpAttributes.retry_cnt = 7;
   qpAttributes.rnr_retry = 7;
   qpAttributes.sq_psn = this->getSequenceNumber();
-  qpAttributes.max_rd_atomic = 1;
+  qpAttributes.max_rd_atomic = 64;
 
   returnValue = ibv_modify_qp(this->ibvQueuePair, &qpAttributes,
                               IBV_QP_STATE | IBV_QP_TIMEOUT | IBV_QP_RETRY_CNT |
