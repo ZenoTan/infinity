@@ -39,6 +39,28 @@ Buffer::Buffer(infinity::core::Context* context, uint64_t sizeInBytes) {
 
 }
 
+Buffer::Buffer(infinity::core::Context* context, uint64_t sizeInBytes, int device) {
+	
+	this->context = context;
+	this->sizeInBytes = sizeInBytes;
+	this->memoryRegionType = RegionType::BUFFER;
+
+	cudaSetDevice(device);
+	int res = cudaMalloc(&this->data, sizeInBytes);
+	INFINITY_ASSERT(res == 0, "[INFINITY][MEMORY][BUFFER] Cannot allocate and align buffer.\n");
+
+	cudaMemset(this->data, 0, sizeInBytes);
+
+	this->ibvMemoryRegion = ibv_reg_mr(this->context->getProtectionDomain(), this->data, this->sizeInBytes,
+			IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ);
+	INFINITY_ASSERT(this->ibvMemoryRegion != NULL, "[INFINITY][MEMORY][BUFFER] Registration failed.\n");
+
+	this->memoryAllocated = true;
+	this->memoryRegistered = true;
+	this->cuda = true;
+
+}
+
 Buffer::Buffer(infinity::core::Context* context, infinity::memory::RegisteredMemory* memory, uint64_t offset, uint64_t sizeInBytes) {
 
 	this->context = context;
@@ -75,7 +97,11 @@ Buffer::~Buffer() {
 		ibv_dereg_mr(this->ibvMemoryRegion);
 	}
 	if (this->memoryAllocated) {
-		free(this->data);
+		if (!this->cuda) {
+			free(this->data);
+		} else {
+			cudaFree(this->data);
+		}
 	}
 
 }

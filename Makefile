@@ -12,7 +12,7 @@ PROJECT_NAME = libinfinity
 
 ##################################################
 
-CC 					= g++
+CC 					= nvcc
 CC_FLAGS 		= -O3 -std=c++14 #-DINFINITY_ASSERT_ON -DINFINITY_DEBUG_ON
 LD_FLAGS		= -linfinity -libverbs -lpthread
 
