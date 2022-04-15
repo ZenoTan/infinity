@@ -47,7 +47,8 @@ void run_server(int rank) {
   infinity::queues::QueuePair *qp;
   printf("Creating buffers to read from and write to\n");
   infinity::memory::Buffer *bufferToReadWrite = new infinity::memory::Buffer(
-      context, NUM_ITER * REQ_LIST * REQ_BYTES * sizeof(char));
+      context,
+      size_t(NUM_ITER) * NUM_REQ * REQ_LIST * REQ_BYTES * sizeof(char));
   infinity::memory::RegionToken *bufferToken =
       bufferToReadWrite->createRegionToken();
 
@@ -88,7 +89,8 @@ void run_client(int rank) {
   printf("Creating buffers\n");
   std::vector<infinity::memory::Buffer *> buffers;
   infinity::memory::Buffer *buffer1Sided = new infinity::memory::Buffer(
-      context, REQ_LIST * REQ_BYTES * sizeof(char));
+      context,
+      size_t(NUM_ITER) * NUM_REQ * REQ_LIST * REQ_BYTES * sizeof(char));
 
   infinity::queues::SendRequestBuffer send_buffer(REQ_LIST);
   std::vector<uint64_t> local_offset(REQ_LIST, 0);
@@ -108,10 +110,9 @@ void run_client(int rank) {
     gettimeofday(&start, NULL);
     for (int j = 0; j < NUM_REQ; j++) {
       for (int t = 0; t < REQ_LIST; t++) {
-        local_offset[t] = i * NUM_REQ * REQ_LIST * REQ_BYTES +
+        local_offset[t] = (size_t)i * NUM_REQ * REQ_LIST * REQ_BYTES +
                           j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
-        remote_offset[t] = i * NUM_REQ * REQ_LIST * REQ_BYTES +
-                           j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
+        remote_offset[t] = local_offset[t];
       }
       infinity::requests::RequestToken *token = nullptr;
       if (j % SIGN_INTERVAL == SIGN_INTERVAL - 1) {
@@ -172,19 +173,33 @@ int main(int argc, char **argv) {
   }
 
   if (isServer) {
-    std::vector<std::thread> threads;
+    std::vector<std::thread> server_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
-      threads.push_back(std::thread(run_server, i));
+      server_threads.push_back(std::thread(run_server, i));
     }
-    for (auto &t : threads) {
+    std::vector<std::thread> client_threads;
+    for (int i = 0; i < NUM_THREAD; i++) {
+      client_threads.push_back(std::thread(run_client, i + NUM_THREAD));
+    }
+    for (auto &t : server_threads) {
+      t.join();
+    }
+    for (auto &t : client_threads) {
       t.join();
     }
   } else {
-    std::vector<std::thread> threads;
+    std::vector<std::thread> server_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
-      threads.push_back(std::thread(run_client, i));
+      server_threads.push_back(std::thread(run_server, i + NUM_THREAD));
     }
-    for (auto &t : threads) {
+    std::vector<std::thread> client_threads;
+    for (int i = 0; i < NUM_THREAD; i++) {
+      client_threads.push_back(std::thread(run_client, i));
+    }
+    for (auto &t : server_threads) {
+      t.join();
+    }
+    for (auto &t : client_threads) {
       t.join();
     }
   }
