@@ -177,6 +177,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_THREAD; i++) {
       server_threads.push_back(std::thread(run_server, i));
     }
+    sleep(5);
     std::vector<std::thread> client_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
       client_threads.push_back(std::thread(run_client, i + NUM_THREAD));
@@ -192,6 +193,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < NUM_THREAD; i++) {
       server_threads.push_back(std::thread(run_server, i + NUM_THREAD));
     }
+    sleep(5);
     std::vector<std::thread> client_threads;
     for (int i = 0; i < NUM_THREAD; i++) {
       client_threads.push_back(std::thread(run_client, i));
