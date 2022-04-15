@@ -33,7 +33,7 @@
 #define REQ_BYTES 512
 #define SIGN_INTERVAL 25
 
-#define NUM_THREAD 1
+#define NUM_THREAD 4
 
 uint64_t timeDiff(struct timeval stop, struct timeval start) {
   return (stop.tv_sec * 1000000L + stop.tv_usec) -
@@ -47,7 +47,7 @@ void run_server(int rank) {
   infinity::queues::QueuePair *qp;
   printf("Creating buffers to read from and write to\n");
   infinity::memory::Buffer *bufferToReadWrite = new infinity::memory::Buffer(
-      context, REQ_LIST * REQ_BYTES * sizeof(char));
+      context, NUM_ITER * REQ_LIST * REQ_BYTES * sizeof(char));
   infinity::memory::RegionToken *bufferToken =
       bufferToReadWrite->createRegionToken();
 
@@ -93,10 +93,6 @@ void run_client(int rank) {
   infinity::queues::SendRequestBuffer send_buffer(REQ_LIST);
   std::vector<uint64_t> local_offset(REQ_LIST, 0);
   std::vector<uint64_t> remote_offset(REQ_LIST, 0);
-  for (int i = 0; i < REQ_LIST; i++) {
-    local_offset[i] = i * REQ_BYTES;
-    remote_offset[i] = i * REQ_BYTES;
-  }
 
   printf("Reading content from remote buffer\n");
   std::vector<infinity::requests::RequestToken *> requests;
@@ -111,6 +107,12 @@ void run_client(int rank) {
     uint64_t cur = 0;
     gettimeofday(&start, NULL);
     for (int j = 0; j < NUM_REQ; j++) {
+      for (int t = 0; t < REQ_LIST; t++) {
+        local_offset[t] = i * NUM_REQ * REQ_LIST * REQ_BYTES +
+                          j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
+        remote_offset[t] = i * NUM_REQ * REQ_LIST * REQ_BYTES +
+                           j * REQ_LIST * REQ_BYTES + t * REQ_BYTES;
+      }
       infinity::requests::RequestToken *token = nullptr;
       if (j % SIGN_INTERVAL == SIGN_INTERVAL - 1) {
         token = requests[j];
