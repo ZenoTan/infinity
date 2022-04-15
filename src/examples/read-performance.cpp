@@ -28,11 +28,11 @@
 #define SERVER_IP "155.198.152.17"
 
 #define NUM_ITER 100
-#define NUM_REQ 1000
-#define REQ_LIST 100
+#define NUM_REQ 5000
+#define REQ_LIST 20
 #define REQ_BYTES 512
 
-#define NUM_THREAD 16
+#define NUM_THREAD 48
 
 uint64_t timeDiff(struct timeval stop, struct timeval start) {
   return (stop.tv_sec * 1000000L + stop.tv_usec) -
@@ -119,7 +119,7 @@ void run_client(int rank) {
     gettimeofday(&stop, NULL);
     cur = timeDiff(stop, start);
 
-    printf("Cur %d took %lu\n", REQ_BYTES * NUM_REQ * REQ_LIST, cur);
+    // printf("Cur %d took %lu\n", REQ_BYTES * NUM_REQ * REQ_LIST, cur);
     cnt += cur;
   }
 

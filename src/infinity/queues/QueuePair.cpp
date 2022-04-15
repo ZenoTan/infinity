@@ -97,6 +97,15 @@ QueuePair::~QueuePair() {
   }
 }
 
+int QueuePair::queryQueuePair(struct ibv_qp_attr *attr, int attr_mask,
+                              struct ibv_qp_init_attr *init_attr) {
+  return ibv_query_qp(this->ibvQueuePair, attr, attr_mask, init_attr);
+}
+
+int QueuePair::modifyQueuePair(struct ibv_qp_attr *attr, int attr_mask) {
+  return ibv_modify_qp(this->ibvQueuePair, attr, attr_mask);
+}
+
 void QueuePair::activate(uint16_t remoteDeviceId,
                          uint32_t remoteQueuePairNumber,
                          uint32_t remoteSequenceNumber) {

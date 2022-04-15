@@ -92,6 +92,9 @@ public:
   bool hasUserData();
   uint32_t getUserDataSize();
   void *getUserData();
+  int queryQueuePair(struct ibv_qp_attr *attr, int attr_mask,
+                     struct ibv_qp_init_attr *init_attr);
+  int modifyQueuePair(struct ibv_qp_attr *attr, int attr_mask);
 
 public:
   /**
